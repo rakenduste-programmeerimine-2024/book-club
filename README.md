@@ -4,7 +4,7 @@
 
 Projekti eesmärk on luua veebirakendus Next.js ja Socket.io abil, mis võimaldab kasutajatel liituda platvormiga anonüümselt või konto kaudu, hallata oma raamatuarvustusi ja -soovitusi, suhelda teiste kasutajatega ning saada raamatusoovitusi põhinedes nende huvidele. Rakenduse struktuur sisaldab nii kasutajaliidest kui ka taustal toimuvat loogikat, mis võimaldab reaalajas suhtlust ja andmehaldust.
 
-## FUnktsioonid
+## Funktsioonid
 
 - **Konto loomine ja haldamine**
   - Kasutaja saab registreeruda, sisse logida, oma profiili muuta ja konto kustutada.
@@ -20,7 +20,8 @@ Projekti eesmärk on luua veebirakendus Next.js ja Socket.io abil, mis võimalda
 ---
 
 **Readme Autor**: Cristina Rits
-                  Lisett-Marleen Tänav
+Lisett-Marleen Tänav
+Dmitrii Agarjov
 
 <a href="https://demo-nextjs-with-supabase.vercel.app/">
   <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
