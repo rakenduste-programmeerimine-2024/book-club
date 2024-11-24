@@ -17,7 +17,7 @@ Projekti eesmärk on luua veebirakendus Next.js ja Socket.io abil, mis võimalda
 - **Statistika ja analüüs**
   - Aktiivsuse tracker, loetud ja alustatud raamatute arv, hinnangud.
 
-## ![example image] (Frame.png)(Frame2.png)
+## [example image] (Frame.png)(Frame2.png)
 
 **Readme Autor**: Cristina Rits
 Lisett-Marleen Tänav
