@@ -16,8 +16,10 @@ Projekti eesmärk on luua veebirakendus Next.js ja Socket.io abil, mis võimalda
   - Raamatusoovitused küsimustiku põhjal, juhuslik raamatusoovitus ning "If you liked this, try..." funktsioon.
 - **Statistika ja analüüs**
   - Aktiivsuse tracker, loetud ja alustatud raamatute arv, hinnangud.
+![Frame](https://githu![Frame2](https://github.com/user-attachments/assets/51a37247-93ec-482a-9dce-0bd35c92cd3e)
+b.com/user-attachments/assets/acd40c85-8c26-4cdd-af5b-7d8019085307)
 
-## [example image] (Frame.png)(Frame2.png)
+
 
 **Readme Autor**: Cristina Rits
 Lisett-Marleen Tänav
