@@ -11,22 +11,22 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <nav className="fixed w-full p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <nav className="fixed w-full p-4 border-b bg-[#faf6f0] backdrop-blur supports-[backdrop-filter]:bg-[#faf6f0]/60">
           <div className="max-w-5xl mx-auto flex justify-between items-center">
             {/* Site Logo */}
-            <Link href="/" className="font-bold text-xl">
+            <Link href="/" className="font-bold text-xl text-black">
               Book Club
             </Link>
 
             {/* Navigation and Search */}
             <div className="flex items-center gap-6">
-              <Link href="/books" className="hover:underline">
+              <Link href="/books" className="hover:underline text-black">
                 Books
               </Link>
-              <Link href="/reviews" className="hover:underline">
+              <Link href="/reviews" className="hover:underline text-black">
                 Reviews
               </Link>
-              <Link href="/about" className="hover:underline">
+              <Link href="/about" className="hover:underline text-black">
                 About
               </Link>
 
@@ -40,22 +40,35 @@ export default function RootLayout({
                   type="text"
                   name="q"
                   placeholder="Search..."
-                  className="px-4 py-2 border rounded-md text-sm bg-gray-100 focus:ring focus:ring-primary"
+                  className="px-4 py-2 border rounded-md text-sm bg-gray-100 focus:ring focus:ring-black"
                 />
                 <button
                   type="submit"
-                  className="absolute right-2 text-gray-500 hover:text-primary"
+                  className="absolute right-2 text-gray-500 hover:text-black"
                 >
                   🔍
                 </button>
               </form>
 
               {/* Authentication */}
-              <AuthButton />
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/sign-in"
+                  className="text-sm text-black hover:underline"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/sign-up"
+                  className="px-4 py-2 bg-black text-white rounded-full text-sm hover:bg-gray-800"
+                >
+                  Get Started
+                </Link>
+              </div>
             </div>
           </div>
         </nav>
-        <div className="pt-16">{children}</div>
+        <div className="pt-16 bg-[#faf6f0]">{children}</div>
       </body>
     </html>
   );
