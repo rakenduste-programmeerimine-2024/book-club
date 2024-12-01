@@ -1,48 +1,56 @@
+import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 
-export default async function SearchPage({
-  searchParams,
-}: {
-  searchParams: { q: string };
-}) {
+interface Book {
+  id: string;
+  title: string;
+  author: string;
+  image_url: string | null;
+}
+
+export default async function SearchPage(props: { searchParams: { q: string } }) {
   const supabase = createClient();
-  const query = searchParams.q || "";
+  const query = props.searchParams.q || "";
 
-  // Fetch books matching the search query
-  const { data: books, error } = await supabase
-    .from("books")
-    .select("*")
-    .ilike("title", `%${query}%`); // Case-insensitive search for titles
+  let books: Book[] = [];
+  if (query) {
+    const { data, error } = await supabase
+      .from("books")
+      .select("id, title, author, image_url")
+      .ilike("title", `%${query}%`);
 
-  if (error) {
-    console.error("Error fetching search results:", error);
-    return <p className="text-red-500">Error loading search results.</p>;
+    if (!error && data) books = data;
   }
 
   return (
-    <main className="p-8 max-w-5xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">
-        Search Results for "{query}"
-      </h1>
-
-      {query.trim() === "" ? (
-        <p className="text-gray-600">Please enter a search query.</p>
-      ) : books.length === 0 ? (
-        <p className="text-gray-600">No results found for "{query}".</p>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    <main className="p-8">
+      <h1 className="text-2xl font-bold mb-4">Search Results for "{query}"</h1>
+      {books.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {books.map((book) => (
-            <div key={book.id} className="p-4 bg-white rounded-md shadow">
-              <img
-                src={book.image_url}
-                alt={book.title}
-                className="w-full h-40 object-cover mb-4"
-              />
-              <h3 className="text-lg font-bold">{book.title}</h3>
-              <p className="text-gray-600">{book.author}</p>
-            </div>
+            <Link
+              key={book.id}
+              href={`/books/${book.id}`}
+              className="block border rounded-md shadow hover:shadow-lg transition"
+            >
+              <div className="p-4">
+                <img
+                  src={book.image_url || "/placeholder.png"}
+                  alt={book.title}
+                  className="w-full h-48 object-cover rounded-t-md"
+                />
+                <div className="p-2">
+                  <h2 className="font-bold text-lg">{book.title}</h2>
+                  <p className="text-sm text-muted-foreground">{book.author}</p>
+                </div>
+              </div>
+            </Link>
           ))}
         </div>
+      ) : (
+        <p className="text-gray-600">
+          {query ? "No results found." : "Please enter a search query."}
+        </p>
       )}
     </main>
   );
