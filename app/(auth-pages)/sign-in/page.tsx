@@ -1,44 +1,57 @@
-import { signInAction } from "@/app/actions";
-import { FormMessage, Message } from "@/components/form-message";
-import { SubmitButton } from "@/components/submit-button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
+"use client";
 
-export default async function Login(props: { searchParams: Promise<Message> }) {
-  const searchParams = await props.searchParams;
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { createClient } from "@/utils/supabase/client";
+
+export default function SignInPage() {
+  const supabase = createClient();
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) {
+      setError("Incorrect email or password. Please try again.");
+      return;
+    }
+    router.push("/");
+  };
+
   return (
-    <form className="flex flex-col min-w-64 max-w-64 mx-auto">
-      <h1 className="text-2xl font-medium">Sign in</h1>
-      <p className="text-sm text-foreground">
-        Pole kontot?{" "}
-        <Link className="text-foreground font-medium underline" href="/sign-up">
-          Registreeru
-        </Link>
-      </p>
-      <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
-        <Label htmlFor="email">Email</Label>
-        <Input name="email" placeholder="teie@email.com" required />
-        <div className="flex justify-between items-center">
-          <Label htmlFor="password">Salasõna</Label>
-          <Link
-            className="text-xs text-foreground underline"
-            href="/forgot-password"
-          >
-            Unustasid salasõna?
-          </Link>
-        </div>
-        <Input
-          type="password"
-          name="password"
-          placeholder="Your password"
+    <div className="max-w-md mx-auto mt-20 p-8 bg-gray-50 shadow-md rounded-md">
+      <h1 className="text-2xl font-bold text-center mb-6">Sign In</h1>
+      {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+      <form onSubmit={handleSignIn} className="space-y-4">
+        <input
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          className="block w-full px-4 py-2 border rounded-md"
           required
         />
-        <SubmitButton pendingText="Signing In..." formAction={signInAction}>
-          Sign in
-        </SubmitButton>
-        <FormMessage message={searchParams} />
-      </div>
-    </form>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password"
+          className="block w-full px-4 py-2 border rounded-md"
+          required
+        />
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-500"
+        >
+          Sign In
+        </button>
+      </form>
+    </div>
   );
 }
