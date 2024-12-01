@@ -50,21 +50,8 @@ export default function RootLayout({
                 </button>
               </form>
 
-              {/* Authentication */}
-              <div className="flex items-center gap-4">
-                <Link
-                  href="/sign-in"
-                  className="text-sm text-black hover:underline"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/sign-up"
-                  className="px-4 py-2 bg-black text-white rounded-full text-sm hover:bg-gray-800"
-                >
-                  Get Started
-                </Link>
-              </div>
+              {/* Authentication or Profile */}
+              <AuthButton />
             </div>
           </div>
         </nav>
