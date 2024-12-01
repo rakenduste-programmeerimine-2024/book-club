@@ -25,7 +25,7 @@ export default async function Signup(props: {
         <p className="text-sm text text-foreground">
           Konto juba olemas?{" "}
           <Link className="text-primary font-medium underline" href="/sign-in">
-            Loogi sisse
+            Logi sisse
           </Link>
         </p>
         <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">

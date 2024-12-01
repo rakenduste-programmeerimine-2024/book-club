@@ -1,11 +1,14 @@
-'use client';
+"use client";
 
-import { useCallback, useEffect, useState } from 'react';
-import { createClient } from '@/utils/supabase/client';
-import { type User } from '@supabase/supabase-js';
+import { useCallback, useEffect, useState } from "react";
+import { createClient } from "@/utils/supabase/client";
+import { type User } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 
 export default function ProfileDetails({ user }: { user: User | null }) {
   const supabase = createClient();
+  const router = useRouter();
+
   const [loading, setLoading] = useState(true);
   const [fullname, setFullname] = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
@@ -15,9 +18,9 @@ export default function ProfileDetails({ user }: { user: User | null }) {
       setLoading(true);
 
       const { data, error, status } = await supabase
-        .from('profiles')
-        .select('full_name, username')
-        .eq('id', user?.id)
+        .from("profiles")
+        .select("full_name, username")
+        .eq("id", user?.id)
         .single();
 
       if (error && status !== 406) {
@@ -30,7 +33,7 @@ export default function ProfileDetails({ user }: { user: User | null }) {
         setUsername(data.username);
       }
     } catch (error) {
-      alert('Error loading user data!');
+      alert("Error loading user data!");
     } finally {
       setLoading(false);
     }
@@ -50,7 +53,7 @@ export default function ProfileDetails({ user }: { user: User | null }) {
     try {
       setLoading(true);
 
-      const { error } = await supabase.from('profiles').upsert({
+      const { error } = await supabase.from("profiles").upsert({
         id: user?.id as string,
         full_name: fullname,
         username,
@@ -59,11 +62,20 @@ export default function ProfileDetails({ user }: { user: User | null }) {
 
       if (error) throw error;
 
-      alert('Profile updated!');
+      alert("Profile updated!");
     } catch (error) {
-      alert('Error updating the data!');
+      alert("Error updating the data!");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      router.push("/"); // Redirect to the main page after logout
+    } catch (error) {
+      console.error("Error during logout:", error);
     }
   };
 
@@ -104,7 +116,7 @@ export default function ProfileDetails({ user }: { user: User | null }) {
           <input
             id="fullName"
             type="text"
-            value={fullname || ''}
+            value={fullname || ""}
             onChange={(e) => setFullname(e.target.value)}
             className="block w-full px-4 py-2 rounded-md bg-[#f2ebe3] text-black border border-[#c4b69e]"
           />
@@ -119,7 +131,7 @@ export default function ProfileDetails({ user }: { user: User | null }) {
           <input
             id="username"
             type="text"
-            value={username || ''}
+            value={username || ""}
             onChange={(e) => setUsername(e.target.value)}
             className="block w-full px-4 py-2 rounded-md bg-[#f2ebe3] text-black border border-[#c4b69e]"
           />
@@ -130,20 +142,18 @@ export default function ProfileDetails({ user }: { user: User | null }) {
             onClick={() => updateProfile({ fullname, username })}
             disabled={loading}
             className={`px-6 py-2 rounded-md shadow-md text-white ${
-              loading ? 'bg-[#b4a68f] cursor-not-allowed' : 'bg-[#887d69]'
+              loading ? "bg-[#b4a68f] cursor-not-allowed" : "bg-[#887d69]"
             }`}
           >
-            {loading ? 'Loading...' : 'Update Profile'}
+            {loading ? "Loading..." : "Update Profile"}
           </button>
 
-          <form action="/auth/signout" method="post">
-            <button
-              type="submit"
-              className="px-6 py-2 rounded-md shadow-md text-white bg-[#aa9b82]"
-            >
-              Sign Out
-            </button>
-          </form>
+          <button
+            onClick={handleLogout}
+            className="px-6 py-2 rounded-md shadow-md text-white bg-[#aa9b82] hover:bg-[#887d69]"
+          >
+            Log Out
+          </button>
         </div>
       </div>
     </div>
