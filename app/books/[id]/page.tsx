@@ -6,11 +6,10 @@ interface BookDetailsProps {
 }
 
 export default async function BookDetailsPage({ params }: BookDetailsProps) {
-  const { id } = await params; // Await params since it's a Promise
+  const { id } = await params;
 
-  const supabase = await createClient(); // Await createClient to get the Supabase client
+  const supabase = await createClient();
 
-  // Fetch the book details
   const { data: book, error: bookError } = await supabase
     .from("books")
     .select("*")
@@ -22,13 +21,11 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
     return <p>Failed to load book details. Please try again later.</p>;
   }
 
-  // Fetch the average rating for this book
-  const { data: ratings, error: ratingsError } = await supabase
+  const { data: ratings } = await supabase
     .from("ratings")
     .select("rating")
     .eq("book_id", id);
 
-  // Calculate the average rating
   const averageRating =
     ratings && ratings.length > 0
       ? (
@@ -54,7 +51,7 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
         <p className="text-black mb-4">{book.description}</p>
         <div className="mb-4">
           <p className="text-lg text-gray-800 font-semibold">
-            Average Rating: {averageRating} ⭐
+            Average Rating: {averageRating}
           </p>
         </div>
         <Rating bookId={id} />
