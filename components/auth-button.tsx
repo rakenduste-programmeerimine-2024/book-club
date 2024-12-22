@@ -1,60 +1,59 @@
-import { createClient } from "@/utils/supabase/server";
-import { Button } from "./ui/button";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
+"use client";
 
-export default async function AuthButton() {
-  const supabase = await createClient();
+import { useState, useEffect } from "react";
+import { createClient } from "@/utils/supabase/client";
+import Link from "next/link";
+import { User } from "@supabase/supabase-js";
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export default function AuthButton() {
+  const supabase = createClient();
+  const [user, setUser] = useState<User | null>(null);
 
-  if (!user) {
-    // When the user is not logged in
-    return (
-      <div className="flex gap-2">
-        <Button asChild size="sm" variant="outline">
-          <a href="/sign-in">Sign in</a>
-        </Button>
-        <Button asChild size="sm" variant="default">
-          <a href="/sign-up">Sign up</a>
-        </Button>
-      </div>
-    );
-  }
+  useEffect(() => {
 
-  // When the user is logged in
-  return (
+    const fetchUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      setUser(user);
+    };
+
+    fetchUser();
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user || null);
+    });
+
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [supabase]);
+
+  return user ? (
     <div className="flex items-center gap-4">
-      <DropdownMenu.Root>
-        {/* Trigger: Profile Icon */}
-        <DropdownMenu.Trigger asChild>
-          <button className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-white">
-            {user.email?.charAt(0).toUpperCase() || "U"}
-          </button>
-        </DropdownMenu.Trigger>
-
-        {/* Dropdown Content */}
-        <DropdownMenu.Portal>
-          <DropdownMenu.Content
-            className="bg-white shadow-md rounded-md p-2 w-48"
-            align="end"
-            sideOffset={5}
-          >
-            {/* Logout Option */}
-            <form action="/api/auth/logout" method="POST">
-              <DropdownMenu.Item
-                asChild
-                className="cursor-pointer px-4 py-2 hover:bg-gray-100 rounded text-sm"
-              >
-                <Button type="submit" size="sm" variant="outline">
-                  Sign out
-                </Button>
-              </DropdownMenu.Item>
-            </form>
-          </DropdownMenu.Content>
-        </DropdownMenu.Portal>
-      </DropdownMenu.Root>
+      {/* Profile Icon */}
+      <Link
+        href="/profile"
+        className="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-white font-bold"
+      >
+        {user.email?.charAt(0).toUpperCase() || "U"}
+      </Link>
+    </div>
+  ) : (
+    <div className="flex gap-2">
+      <Link
+        href="/sign-in"
+        className="px-4 py-2 text-sm font-medium text-black hover:underline"
+      >
+        Sign in
+      </Link>
+      <Link
+        href="/sign-up"
+        className="px-4 py-2 bg-black text-white text-sm font-medium rounded-full hover:bg-gray-800"
+      >
+        Get started
+      </Link>
     </div>
   );
 }

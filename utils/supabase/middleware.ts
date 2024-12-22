@@ -33,15 +33,20 @@ export const updateSession = async (request: NextRequest) => {
       },
     );
 
-    const { data: user, error } = await supabase.auth.getUser();
+    const user = await supabase.auth.getUser();
 
-    if (request.nextUrl.pathname.startsWith("/protected") && error) {
+    if (request.nextUrl.pathname.startsWith("/protected") && !user) {
       return NextResponse.redirect(new URL("/sign-in", request.url));
+    }
+
+    if (request.nextUrl.pathname === "/") {
+      return NextResponse.next();
     }
 
     return response;
   } catch (e) {
-    // Handle Supabase client creation errors
+
+    console.error("Supabase updateSession error:", e);
     return NextResponse.next({
       request: {
         headers: request.headers,
