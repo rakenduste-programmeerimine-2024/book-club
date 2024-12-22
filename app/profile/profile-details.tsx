@@ -151,7 +151,7 @@ export default function ProfileDetails({ user }: { user: User | null }) {
 
           <button
             onClick={handleLogout}
-            className="px-6 py-2 rounded-md shadow-md text-white bg-[#aa9b82] hover:bg-[#887d69]"
+            className="px-6 py-2 rounded-md shadow-md text-white bg-[#ff0000] hover:bg-[#950606]"
           >
             Log Out
           </button>
