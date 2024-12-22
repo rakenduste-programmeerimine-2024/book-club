@@ -20,10 +20,10 @@ export default function RootLayout({
             {/* Navigation Links */}
             <div className="flex-1 flex justify-center gap-6">
               <Link href="/books" className="hover:underline text-foreground">
-                Books
+                My books
               </Link>
               <Link href="/reviews" className="hover:underline text-foreground">
-                Reviews
+                My reviews
               </Link>
               <Link href="/about" className="hover:underline text-foreground">
                 About

@@ -7,6 +7,10 @@ interface BookDetailsProps {
 
 const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY;
 
+const stripHtmlTags = (input: string): string => {
+  return input.replace(/<[^>]*>/g, ""); // This removes all HTML tags
+};
+
 export default async function BookDetailsPage({ params }: BookDetailsProps) {
   const { id } = await params;
 
@@ -46,7 +50,9 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
         <div className="w-2/3">
           <h1 className="text-3xl font-bold mb-4 text-black">{book.title}</h1>
           <p className="text-sm text-gray-700 mb-6">Written by: {book.author}</p>
-          <p className="text-black mb-4">{book.description || "No description available."}</p>
+          <p className="text-black mb-4">
+            {book.description ? stripHtmlTags(book.description) : "No description available."}
+          </p>
           <div className="mb-4">
             <p className="text-lg text-gray-800 font-semibold">
               Average Rating: {averageRating}
@@ -57,6 +63,7 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
       </div>
     );
   }
+
   try {
     const response = await fetch(
       `https://www.googleapis.com/books/v1/volumes/${id}?key=${GOOGLE_BOOKS_API_KEY}`
@@ -87,7 +94,7 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
             Written by: {authors?.join(", ") || "Unknown Author"}
           </p>
           <p className="text-black mb-4">
-            {description || "No description available."}
+            {description ? stripHtmlTags(description) : "No description available."}
           </p>
           <div className="mb-4">
             <p className="text-lg text-gray-800 font-semibold">
