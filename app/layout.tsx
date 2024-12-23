@@ -12,12 +12,10 @@ export default function RootLayout({
       <body>
         <nav className="fixed w-full p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="max-w-5xl mx-auto flex justify-between items-center">
-            {/* Site Logo */}
             <Link href="/" className="font-bold text-xl text-foreground">
               Book Club
             </Link>
 
-            {/* Navigation Links */}
             <div className="flex-1 flex justify-center gap-6">
               <Link href="/books" className="hover:underline text-foreground">
                 Books
@@ -30,7 +28,6 @@ export default function RootLayout({
               </Link>
             </div>
 
-            {/* Search Bar */}
             <form
               action="/search"
               method="GET"
@@ -50,14 +47,12 @@ export default function RootLayout({
               </button>
             </form>
 
-            {/* Authentication or Profile */}
             <div className="ml-auto">
               <AuthButton />
             </div>
           </div>
         </nav>
 
-        {/* Page Content */}
         <div className="pt-16 bg-background">{children}</div>
       </body>
     </html>
