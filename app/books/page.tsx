@@ -4,66 +4,58 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 
-// Define a common Book type
-interface Book {
-  id: string;
-  title: string;
-  author: string;
-  averageRating: number;
-  image_url: string | null;
-}
-
 export default function BooksPage() {
-  const [books, setBooks] = useState<Book[]>([]);
-  const [filteredBooks, setFilteredBooks] = useState<Book[]>([]);
+  const [books, setBooks] = useState([]);
+  const [googleBooks, setGoogleBooks] = useState([]);
   const [filter, setFilter] = useState({
     title: "",
     minRating: 0,
     sort: "desc",
   });
+  const [filteredBooks, setFilteredBooks] = useState([]);
+  const [error, setError] = useState(null);
 
   const GOOGLE_BOOKS_API_KEY = "AIzaSyAmpgtabwZ9s2sSN0ln8R_n5BcSz_0y0xg";
 
   // Fetch books from Supabase
-  const fetchSupabaseBooks = async (): Promise<Book[]> => {
-    const supabase = createClient();
-    const { data, error } = await supabase
-      .from("books")
-      .select("*, ratings (rating)")
-      .limit(1000); // Fetch all rows
+  const fetchSupabaseBooks = async () => {
+    const supabase = await createClient();
 
-    if (error) {
-      console.error("Error fetching Supabase books:", error.message);
+    const { data: booksData, error: booksError } = await supabase
+      .from("books")
+      .select(`
+        *,
+        ratings (rating)
+      `);
+
+    if (booksError) {
+      console.error("Error fetching books:", booksError.message);
+      setError("Error loading books from Supabase");
       return [];
     }
 
-    return data.map((book: any) => {
+    return booksData.map((book) => {
       const ratings = book.ratings || [];
       const averageRating =
         ratings.length > 0
-          ? ratings.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) /
-            ratings.length
-          : 0;
-      return {
-        id: book.id,
-        title: book.title,
-        author: book.author,
-        averageRating: parseFloat(averageRating.toFixed(1)),
-        image_url: book.image_url,
-      };
+          ? (
+              ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+            ).toFixed(1)
+          : "No ratings yet";
+      return { ...book, averageRating: parseFloat(averageRating) || 0 };
     });
   };
 
   // Fetch books from Google Books API
-  const fetchGoogleBooks = async (query = "fiction"): Promise<Book[]> => {
+  const fetchGoogleBooks = async (query = "fiction") => {
     try {
       const response = await fetch(
-        `https://www.googleapis.com/books/v1/volumes?q=${query}&key=${GOOGLE_BOOKS_API_KEY}&maxResults=40`
+        `https://www.googleapis.com/books/v1/volumes?q=${query}&key=${GOOGLE_BOOKS_API_KEY}`
       );
       const data = await response.json();
       if (!data.items) return [];
 
-      return data.items.map((item: any) => ({
+      return data.items.map((item) => ({
         id: item.id,
         title: item.volumeInfo.title || "Unknown Title",
         author: item.volumeInfo.authors?.join(", ") || "Unknown Author",
@@ -71,26 +63,25 @@ export default function BooksPage() {
         image_url: item.volumeInfo.imageLinks?.thumbnail || null,
       }));
     } catch (err) {
-      console.error("Error fetching Google Books:");
+      console.error("Error fetching books from Google:", err.message);
       return [];
     }
   };
 
-  // Fetch and combine books
+  // Fetch books from both sources
   useEffect(() => {
     const fetchBooks = async () => {
       const supabaseBooks = await fetchSupabaseBooks();
       const googleBooks = await fetchGoogleBooks();
-      const combinedBooks = [...supabaseBooks, ...googleBooks];
 
-      setBooks(combinedBooks);
-      setFilteredBooks(combinedBooks);
+      setBooks([...supabaseBooks, ...googleBooks]);
+      setFilteredBooks([...supabaseBooks, ...googleBooks]);
     };
 
     fetchBooks();
   }, []);
 
-  // Apply filters
+  // Apply filters and sorting
   useEffect(() => {
     const applyFilters = () => {
       let filtered = books.filter((book) => {
@@ -112,6 +103,14 @@ export default function BooksPage() {
 
     applyFilters();
   }, [filter, books]);
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (!books || books.length === 0) {
+    return <div>No books available</div>;
+  }
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
