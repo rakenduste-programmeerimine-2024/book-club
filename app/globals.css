@@ -4,8 +4,8 @@
 
 @layer base {
   :root {
-    --background: 37 20% 90%; /* Beige tone */
-    --foreground: 0 0% 10%; /* Dark text */
+    --background: 37 20% 90%;
+    --foreground: 0 0% 10%;
     --card: 37 20% 90%;
     --card-foreground: 0 0% 10%;
     --popover: 37 20% 90%;
