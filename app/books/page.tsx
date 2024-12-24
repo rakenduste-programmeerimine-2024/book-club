@@ -17,7 +17,7 @@ export default function BooksPage() {
 
   const GOOGLE_BOOKS_API_KEY = "AIzaSyAmpgtabwZ9s2sSN0ln8R_n5BcSz_0y0xg";
 
-  // Fetch books from Supabase
+  // Fetch books from Supabase (only favorites)
   const fetchSupabaseBooks = async () => {
     const supabase = await createClient();
 
@@ -26,7 +26,8 @@ export default function BooksPage() {
       .select(`
         *,
         ratings (rating)
-      `);
+      `)
+      .eq("is_favorite", true);  // Only fetch books where is_favorite = TRUE
 
     if (booksError) {
       console.error("Error fetching books:", booksError.message);

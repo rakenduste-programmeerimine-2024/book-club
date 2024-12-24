@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import Rating from "@/components/rating";
+import AddToFavoritesButton from "@/components/add-to-favorites-button";
 
 interface BookDetailsProps {
   params: Promise<{ id: string }>;
@@ -46,7 +47,10 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
         />
       </div>
       <div className="w-2/3">
-        <h1 className="text-3xl font-bold mb-4 text-black">{book.title}</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-3xl font-bold text-black">{book.title}</h1>
+          <AddToFavoritesButton bookId={id} />
+        </div>
         <p className="text-sm text-gray-700 mb-6">Written by: {book.author}</p>
         <p className="text-black mb-4">{book.description}</p>
         <div className="mb-4">
