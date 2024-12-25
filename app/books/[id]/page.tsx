@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import Rating from "@/components/rating";
+import AddToFavoritesButton from "@/components/add-to-favorites-button";
 
 interface BookDetailsProps {
   params: Promise<{ id: string }>;

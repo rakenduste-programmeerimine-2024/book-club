@@ -9,6 +9,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <title>Book Club</title>
+      </head>
       <body>
         <nav className="fixed w-full p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="max-w-5xl mx-auto flex justify-between items-center">
