@@ -11,26 +11,35 @@ export default async function Signup(props: {
   const searchParams = await props.searchParams;
   if ("message" in searchParams) {
     return (
-      <div className="w-full flex-1 flex items-center h-screen sm:max-w-md justify-center gap-2 p-4">
+      <div className="w-full h-screen flex items-center justify-center bg-background">
         <FormMessage message={searchParams} />
       </div>
     );
   }
 
   return (
-    <>
-      <form className="flex flex-col min-w-64 max-w-64 mx-auto">
-        <h1 className="text-2xl font-medium">Registreeru</h1>
-        <p className="text-sm text text-foreground">
+    <div className="w-full h-screen flex items-center justify-center bg-background">
+      <form className="flex flex-col w-full max-w-md p-6 bg-card rounded-md shadow-lg">
+        <h1 className="text-2xl font-medium mb-4 text-center text-card-foreground">
+          Registreeru
+        </h1>
+        <p className="text-sm text-center text-muted-foreground mb-6">
           Konto juba olemas?{" "}
-          <Link className="text-primary font-medium underline" href="/sign-in">
+          <Link
+            className="text-primary font-medium underline hover:text-primary-foreground"
+            href="/sign-in"
+          >
             Logi sisse
           </Link>
         </p>
-        <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
-          <Label htmlFor="email">Email</Label>
+        <div className="flex flex-col gap-4">
+          <Label htmlFor="email" className="text-card-foreground">
+            Email
+          </Label>
           <Input name="email" placeholder="teie@email.com" required />
-          <Label htmlFor="password">Salasõna</Label>
+          <Label htmlFor="password" className="text-card-foreground">
+            Salasõna
+          </Label>
           <Input
             type="password"
             name="password"
@@ -44,6 +53,6 @@ export default async function Signup(props: {
           <FormMessage message={searchParams} />
         </div>
       </form>
-    </>
+    </div>
   );
 }
