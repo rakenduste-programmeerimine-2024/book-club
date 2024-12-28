@@ -36,10 +36,8 @@ export default function BooksPage() {
         title,
         author,
         ratings (rating),
-        is_favorite,
         image_url
       `)
-      .eq("is_favorite", true); // Only fetch books where is_favorite = TRUE
 
     if (booksError) {
       console.error("Error fetching books:", booksError.message);
@@ -66,11 +64,11 @@ export default function BooksPage() {
     });
   };
 
-  // Fetch books from Google Books API
+  // Fetch books from Google Books API (limit to top 100 results)
   const fetchGoogleBooks = async (query = "fiction"): Promise<Book[]> => {
     try {
       const response = await fetch(
-        `https://www.googleapis.com/books/v1/volumes?q=${query}&key=${GOOGLE_BOOKS_API_KEY}`
+        `https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=100&key=${GOOGLE_BOOKS_API_KEY}`
       );
       const data = await response.json();
       if (!data.items) return [];
@@ -83,7 +81,7 @@ export default function BooksPage() {
         image_url: item.volumeInfo.imageLinks?.thumbnail || null,
       }));
     } catch (err) {
-      console.error("Error fetching books from Google:");
+      console.error("Error fetching books from Google:", err);
       return [];
     }
   };
@@ -94,8 +92,13 @@ export default function BooksPage() {
       const supabaseBooks = await fetchSupabaseBooks();
       const googleBooks = await fetchGoogleBooks();
 
-      setBooks([...supabaseBooks, ...googleBooks]);
-      setFilteredBooks([...supabaseBooks, ...googleBooks]);
+      const allBooks = [...supabaseBooks, ...googleBooks];
+      const topBooks = allBooks
+        .sort((a, b) => b.averageRating - a.averageRating) // Sort books by rating
+        .slice(0, 100); // Limit to top 100 books
+
+      setBooks(topBooks);
+      setFilteredBooks(topBooks);
     };
 
     fetchBooks();
@@ -134,63 +137,7 @@ export default function BooksPage() {
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Books</h1>
-
-      {/* Filters */}
-      <div className="mb-8">
-        <input
-          type="text"
-          placeholder="Search by title"
-          value={filter.title}
-          onChange={(e) =>
-            setFilter((prev) => ({ ...prev, title: e.target.value }))
-          }
-          className="w-full p-2 border rounded-md mb-4"
-        />
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <label htmlFor="minRating" className="font-medium text-gray-700">
-              Minimum Rating:
-            </label>
-            <input
-              id="minRating"
-              type="number"
-              min="0"
-              max="5"
-              step="0.1"
-              value={filter.minRating}
-              onChange={(e) =>
-                setFilter((prev) => ({
-                  ...prev,
-                  minRating: parseFloat(e.target.value) || 0,
-                }))
-              }
-              className="w-20 p-2 border rounded-md"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="sortOrder"
-              className="font-medium text-gray-700 mr-2"
-            >
-              Sort by Rating:
-            </label>
-            <select
-              id="sortOrder"
-              value={filter.sort}
-              onChange={(e) =>
-                setFilter((prev) => ({ ...prev, sort: e.target.value }))
-              }
-              className="p-2 border rounded-md"
-            >
-              <option value="desc">Descending</option>
-              <option value="asc">Ascending</option>
-            </select>
-          </div>
-        </div>
-      </div>
+      <h1 className="text-3xl font-bold mb-6">Top 100 Books</h1>
 
       {/* Books Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">

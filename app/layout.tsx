@@ -29,6 +29,9 @@ export default function RootLayout({
               <Link href="/about" className="hover:underline text-foreground">
                 About
               </Link>
+              <Link href="/top100" className="hover:underline text-foreground">
+                Top 100
+              </Link>
             </div>
 
             <form
