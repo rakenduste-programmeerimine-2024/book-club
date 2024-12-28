@@ -39,30 +39,33 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
           ).toFixed(1)
         : "No ratings yet";
 
-    return (
-      <div className="p-8 rounded-md shadow-lg max-w-4xl mx-auto mt-12 bg-[#dbd2c3] border border-[#b4a68f] flex gap-8">
-        <div className="w-1/3">
-          <img
-            src={book.image_url || "/placeholder.png"}
-            alt={book.title}
-            className="w-full h-auto rounded-md"
-          />
-        </div>
-        <div className="w-2/3">
-          <h1 className="text-3xl font-bold mb-4 text-black">{book.title}</h1>
-          <p className="text-sm text-gray-700 mb-6">Written by: {book.author}</p>
-          <p className="text-black mb-4">
-            {book.description ? stripHtmlTags(book.description) : "No description available."}
-          </p>
-          <div className="mb-4">
-            <p className="text-lg text-gray-800 font-semibold">
-              Average Rating: {averageRating}
-            </p>
-          </div>
-          <Rating bookId={id} />
-        </div>
+return (
+  <div className="p-8 rounded-md shadow-lg max-w-4xl mx-auto mt-12 bg-[#dbd2c3] border border-[#b4a68f] flex gap-8">
+    <div className="w-1/3">
+      <img
+        src={book.image_url || "/placeholder.png"}
+        alt={book.title}
+        className="w-full h-auto rounded-md"
+      />
+    </div>
+    <div className="w-2/3 relative">
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-black">{book.title}</h1>
+        <AddToFavoritesButton bookId={id} isFavorite={book.is_favorite} />
       </div>
-    );
+      <p className="text-sm text-gray-700 mb-6">Written by: {book.author}</p>
+      <p className="text-black mb-4">
+        {book.description ? stripHtmlTags(book.description) : "No description available."}
+      </p>
+      <div className="mb-4">
+        <p className="text-lg text-gray-800 font-semibold">
+          Average Rating: {averageRating}
+        </p>
+      </div>
+      <Rating bookId={id} />
+    </div>
+  </div>
+);
   }
 
   try {
@@ -101,6 +104,10 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
             <p className="text-lg text-gray-800 font-semibold">
               Average Rating: Not available
             </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <Rating bookId={id} />
+            <AddToFavoritesButton bookId={id} isFavorite={false} />
           </div>
         </div>
       </div>

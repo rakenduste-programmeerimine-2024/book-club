@@ -6,6 +6,7 @@ import { FaStar } from "react-icons/fa";
 
 interface AddToFavoritesButtonProps {
   bookId: string;
+  isFavorite?: boolean;
 }
 
 export default function AddToFavoritesButton({ bookId }: AddToFavoritesButtonProps) {
