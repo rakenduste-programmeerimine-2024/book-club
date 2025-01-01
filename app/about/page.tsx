@@ -1,34 +1,49 @@
-import { NextPage } from "next";
+import React from "react";
 
-const About: NextPage = () => {
+export default function AboutPage() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-white to-gray-100">
-      <div className="text-center max-w-2xl bg-white shadow-lg rounded-lg p-8">
-        <h1 className="text-5xl font-extrabold text-gray-800 mb-4">
-          Welcome to Book Club!
-        </h1>
-        <p className="text-lg text-gray-600 leading-relaxed mb-8">
-          A platform that connects readers and explorers. Manage your reading journey 
-          and share your passion for literature with us!
-        </p>
-        <div className="bg-gray-50 rounded-lg p-6 shadow">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-            Why choose our platform?
+    <div className="w-full h-screen bg-background p-8">
+      <h1 className="text-4xl font-bold text-center text-card-foreground mb-12">
+        Meist
+      </h1>
+      <div className="flex justify-center space-x-6">
+        {/* Cube 1 */}
+        <div className="bg-card p-6 rounded-lg shadow-lg max-w-xs transform rotate-2 hover:rotate-0 transition-transform duration-300">
+          <h2 className="text-xl font-semibold text-card-foreground mb-4">
+            Meie missioon
           </h2>
-          <p className="text-gray-600 leading-relaxed mb-4">
-            Our goal is to provide an inspiring and fun way to track your reading habits. 
-            Whether it's your first book or your thousandth, our community supports you every step of the way.
+          <p className="text-muted-foreground">
+            Meie "Raamatuklubi" eesmärk on taaselustada raamatute lugemise
+            kultuur. Uskume, et raamatud inspireerivad, harivad ja loovad
+            sügavaid emotsionaalseid sidemeid. Meie missioon on tuua inimesed
+            taas lähemale lugemisele.
           </p>
-          <ul className="list-disc list-inside text-gray-600 text-left">
-            <li>Discover new book recommendations tailored to your taste.</li>
-            <li>Create personal reading lists and set goals.</li>
-            <li>Engage with fellow book enthusiasts in real-time.</li>
-            <li>Share your opinions and find inspiring reads.</li>
-          </ul>
+        </div>
+
+        {/* Cube 2 */}
+        <div className="bg-card p-6 rounded-lg shadow-lg max-w-xs transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+          <h2 className="text-xl font-semibold text-card-foreground mb-4">
+            Probleem, mida soovime lahendada
+          </h2>
+          <p className="text-muted-foreground">
+            Tehnoloogia ja kiire elutempo tõttu on paljud inimesed kaotanud huvi
+            lugemise vastu. Tahame aidata inimestel avastada uuesti raamatute
+            ilu ja kasu.
+          </p>
+        </div>
+
+        {/* Cube 3 */}
+        <div className="bg-card p-6 rounded-lg shadow-lg max-w-xs transform rotate-6 hover:rotate-0 transition-transform duration-300">
+          <h2 className="text-xl font-semibold text-card-foreground mb-4">
+            Kuidas me seda teeme
+          </h2>
+          <p className="text-muted-foreground">
+            Korraldame regulaarselt kohtumisi, jagame raamatusoovitusi ja loome
+            kogukonna, kus igaüks tunneb end motiveerituna lugema rohkem ja
+            avastama uusi maailmu raamatute kaudu.
+          </p>
         </div>
       </div>
     </div>
   );
-};
-
-export default About;
+}
