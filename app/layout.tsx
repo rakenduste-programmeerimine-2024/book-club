@@ -13,7 +13,7 @@ export default function RootLayout({
         <title>Book Club</title>
       </head>
       <body>
-        <nav className="fixed w-full p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <nav className="fixed w-full p-4 border-b bg-background z-50 shadow-md">
           <div className="max-w-5xl mx-auto flex justify-between items-center">
             <Link href="/" className="font-bold text-xl text-foreground">
               Book Club
@@ -59,7 +59,7 @@ export default function RootLayout({
           </div>
         </nav>
 
-        <div className="pt-16 bg-background">{children}</div>
+        <div className="pt-[calc(64px+1rem)] bg-background">{children}</div>
       </body>
     </html>
   );
