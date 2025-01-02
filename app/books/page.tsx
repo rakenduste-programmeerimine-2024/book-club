@@ -19,6 +19,7 @@ export default function BooksPage() {
     title: "",
     minRating: 0,
     sort: "desc",
+    includeGoogleBooks: true,
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -92,14 +93,16 @@ export default function BooksPage() {
   useEffect(() => {
     const fetchBooks = async () => {
       const supabaseBooks = await fetchSupabaseBooks();
-      const googleBooks = await fetchGoogleBooks();
+      const googleBooks = filter.includeGoogleBooks
+        ? await fetchGoogleBooks()
+        : [];
 
       setBooks([...supabaseBooks, ...googleBooks]);
       setFilteredBooks([...supabaseBooks, ...googleBooks]);
     };
 
     fetchBooks();
-  }, []);
+  }, [filter.includeGoogleBooks]);
 
   useEffect(() => {
     const applyFilters = () => {
@@ -146,7 +149,7 @@ export default function BooksPage() {
           className="w-full p-2 border rounded-md mb-4"
         />
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-4">
             <label htmlFor="minRating" className="font-medium text-gray-700">
               Minimum Rating:
@@ -188,22 +191,42 @@ export default function BooksPage() {
             </select>
           </div>
         </div>
+
+        <div className="flex items-center space-x-4">
+          <input
+            type="checkbox"
+            id="includeGoogleBooks"
+            checked={filter.includeGoogleBooks}
+            onChange={(e) =>
+              setFilter((prev) => ({
+                ...prev,
+                includeGoogleBooks: e.target.checked,
+              }))
+            }
+          />
+          <label htmlFor="includeGoogleBooks" className="font-medium text-gray-700">
+            Include Google Books
+          </label>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
         {filteredBooks.map((book) => (
           <Link href={`/books/${book.id}`} key={book.id}>
-            <div className="bg-white shadow-md rounded-md overflow-hidden cursor-pointer hover:shadow-lg">
+            <div
+              className="bg-white shadow-md rounded-md overflow-hidden cursor-pointer hover:shadow-lg"
+              style={{ width: "270px", height: "320px" }}
+            >
               {book.image_url && (
                 <img
                   src={book.image_url}
                   alt={book.title}
-                  className="w-full h-48 object-cover"
+                  className="w-full h-2/3 object-cover"
                 />
               )}
-              <div className="p-4">
-                <h2 className="text-lg font-bold">{book.title}</h2>
-                <p className="text-gray-600">{book.author}</p>
+              <div className="p-4 h-1/3 flex flex-col justify-between">
+                <h2 className="text-lg font-bold truncate">{book.title}</h2>
+                <p className="text-gray-600 truncate">{book.author}</p>
                 <p className="text-sm text-gray-700 mt-2">
                   {book.averageRating
                     ? `⭐ ${book.averageRating.toFixed(1)}/5`
