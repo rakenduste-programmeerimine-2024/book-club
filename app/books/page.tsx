@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 
-// Define the Book interface
 interface Book {
   id: string;
   title: string;
@@ -25,21 +24,22 @@ export default function BooksPage() {
 
   const GOOGLE_BOOKS_API_KEY = "AIzaSyAmpgtabwZ9s2sSN0ln8R_n5BcSz_0y0xg";
 
-  // Fetch books from Supabase (only favorites)
   const fetchSupabaseBooks = async (): Promise<Book[]> => {
     const supabase = await createClient();
 
     const { data: booksData, error: booksError } = await supabase
       .from("books")
-      .select(`
+      .select(
+        `
         id,
         title,
         author,
         ratings (rating),
         is_favorite,
         image_url
-      `)
-      .eq("is_favorite", true); // Only fetch books where is_favorite = TRUE
+      `
+      )
+      .eq("is_favorite", true);
 
     if (booksError) {
       console.error("Error fetching books:", booksError.message);
@@ -52,8 +52,10 @@ export default function BooksPage() {
       const averageRating =
         ratings.length > 0
           ? (
-              ratings.reduce((sum: number, r: { rating: number }) => sum + r.rating, 0) /
-              ratings.length
+              ratings.reduce(
+                (sum: number, r: { rating: number }) => sum + r.rating,
+                0
+              ) / ratings.length
             ).toFixed(1)
           : "0";
       return {
@@ -66,7 +68,6 @@ export default function BooksPage() {
     });
   };
 
-  // Fetch books from Google Books API
   const fetchGoogleBooks = async (query = "fiction"): Promise<Book[]> => {
     try {
       const response = await fetch(
@@ -88,7 +89,6 @@ export default function BooksPage() {
     }
   };
 
-  // Fetch books from both sources
   useEffect(() => {
     const fetchBooks = async () => {
       const supabaseBooks = await fetchSupabaseBooks();
@@ -101,7 +101,6 @@ export default function BooksPage() {
     fetchBooks();
   }, []);
 
-  // Apply filters and sorting
   useEffect(() => {
     const applyFilters = () => {
       let filtered = books.filter((book) => {
@@ -136,7 +135,6 @@ export default function BooksPage() {
     <div className="p-8 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Books</h1>
 
-      {/* Filters */}
       <div className="mb-8">
         <input
           type="text"
@@ -192,7 +190,6 @@ export default function BooksPage() {
         </div>
       </div>
 
-      {/* Books Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {filteredBooks.map((book) => (
           <Link href={`/books/${book.id}`} key={book.id}>
