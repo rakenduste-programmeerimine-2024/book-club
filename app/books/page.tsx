@@ -4,12 +4,15 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 
+type Status = "CURRENTLY_READING" | "COMPLETED" | "PLAN_TO_READ" | "ON_HOLD" | "ALL";
+
 interface Book {
   id: string;
   title: string;
   author: string;
   averageRating: number;
   image_url: string | null;
+  status?: Status | null;
 }
 
 export default function BooksPage() {
@@ -19,36 +22,35 @@ export default function BooksPage() {
     title: "",
     minRating: 0,
     sort: "desc",
-    includeGoogleBooks: true,
+    status: "ALL" as Status
   });
   const [error, setError] = useState<string | null>(null);
 
-  const GOOGLE_BOOKS_API_KEY = "AIzaSyAmpgtabwZ9s2sSN0ln8R_n5BcSz_0y0xg";
-
-  const fetchSupabaseBooks = async (): Promise<Book[]> => {
+  const fetchBooks = async () => {
     const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
     const { data: booksData, error: booksError } = await supabase
       .from("books")
-      .select(
-        `
+      .select(`
         id,
         title,
         author,
         ratings (rating),
         is_favorite,
-        image_url
-      `
-      )
-      .eq("is_favorite", true);
+        image_url,
+        reading_status!inner (
+          status
+        )
+      `);
 
     if (booksError) {
       console.error("Error fetching books:", booksError.message);
-      setError("Error loading books from Supabase");
-      return [];
+      setError("Error loading books");
+      return;
     }
 
-    return booksData.map((book: any) => {
+    const processedBooks = booksData.map((book: any) => {
       const ratings = book.ratings || [];
       const averageRating =
         ratings.length > 0
@@ -65,44 +67,17 @@ export default function BooksPage() {
         author: book.author,
         averageRating: parseFloat(averageRating) || 0,
         image_url: book.image_url || null,
+        status: book.reading_status?.[0]?.status || null
       };
     });
-  };
 
-  const fetchGoogleBooks = async (query = "fiction"): Promise<Book[]> => {
-    try {
-      const response = await fetch(
-        `https://www.googleapis.com/books/v1/volumes?q=${query}&key=${GOOGLE_BOOKS_API_KEY}`
-      );
-      const data = await response.json();
-      if (!data.items) return [];
-
-      return data.items.map((item: any) => ({
-        id: item.id,
-        title: item.volumeInfo.title || "Unknown Title",
-        author: item.volumeInfo.authors?.join(", ") || "Unknown Author",
-        averageRating: item.volumeInfo.averageRating || 0,
-        image_url: item.volumeInfo.imageLinks?.thumbnail || null,
-      }));
-    } catch (err) {
-      console.error("Error fetching books from Google:");
-      return [];
-    }
+    setBooks(processedBooks);
+    setFilteredBooks(processedBooks);
   };
 
   useEffect(() => {
-    const fetchBooks = async () => {
-      const supabaseBooks = await fetchSupabaseBooks();
-      const googleBooks = filter.includeGoogleBooks
-        ? await fetchGoogleBooks()
-        : [];
-
-      setBooks([...supabaseBooks, ...googleBooks]);
-      setFilteredBooks([...supabaseBooks, ...googleBooks]);
-    };
-
     fetchBooks();
-  }, [filter.includeGoogleBooks]);
+  }, []);
 
   useEffect(() => {
     const applyFilters = () => {
@@ -111,7 +86,8 @@ export default function BooksPage() {
           .toLowerCase()
           .includes(filter.title.toLowerCase());
         const matchesRating = book.averageRating >= filter.minRating;
-        return matchesTitle && matchesRating;
+        const matchesStatus = filter.status === "ALL" || book.status === filter.status;
+        return matchesTitle && matchesRating && matchesStatus;
       });
 
       filtered = filtered.sort((a, b) =>
@@ -192,21 +168,24 @@ export default function BooksPage() {
           </div>
         </div>
 
-        <div className="flex items-center space-x-4">
-          <input
-            type="checkbox"
-            id="includeGoogleBooks"
-            checked={filter.includeGoogleBooks}
-            onChange={(e) =>
-              setFilter((prev) => ({
-                ...prev,
-                includeGoogleBooks: e.target.checked,
-              }))
-            }
-          />
-          <label htmlFor="includeGoogleBooks" className="font-medium text-gray-700">
-            Include Google Books
+        <div className="flex items-center space-x-4 mb-4">
+          <label htmlFor="statusFilter" className="font-medium text-gray-700">
+            Reading Status:
           </label>
+          <select
+            id="statusFilter"
+            value={filter.status}
+            onChange={(e) =>
+              setFilter((prev) => ({ ...prev, status: e.target.value as Status }))
+            }
+            className="p-2 border rounded-md"
+          >
+            <option value="ALL">All</option>
+            <option value="CURRENTLY_READING">Currently Reading</option>
+            <option value="COMPLETED">Completed</option>
+            <option value="PLAN_TO_READ">Plan to Read</option>
+            <option value="ON_HOLD">On Hold</option>
+          </select>
         </div>
       </div>
 
