@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/server";
 import Rating from "@/components/rating";
-import AddToFavoritesButton from "@/components/add-to-favorites-button";
+import ReadingStatus from "@/components/reading-status";
+import AddToLibraryButton from "@/components/add-to-library-button";
 
 interface BookDetailsProps {
   params: Promise<{ id: string }>;
@@ -83,7 +84,6 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
           <div className="w-2/3 relative">
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold text-black">{book.title}</h1>
-              <AddToFavoritesButton bookId={id} isFavorite={book.is_favorite} />
             </div>
             <p className="text-sm text-gray-700 mb-6">Written by: {book.author}</p>
             <p className="text-black mb-4">
@@ -94,7 +94,10 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
                 Average Rating: {averageRating}
               </p>
             </div>
-            <Rating bookId={id} />
+            <div className="flex items-center gap-4 mb-4">
+              <Rating bookId={id} />
+              <ReadingStatus bookId={id} />
+            </div>
           </div>
         </div>
 
@@ -161,7 +164,6 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
 
     return (
       <div className="p-8 rounded-md shadow-lg max-w-4xl mx-auto mt-12 bg-[#dbd2c3] border border-[#b4a68f] flex flex-col gap-8">
-        {/* Fallback Book Details */}
         <div className="flex gap-8">
           <div className="w-1/3">
             <img
@@ -171,7 +173,18 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
             />
           </div>
           <div className="w-2/3">
-            <h1 className="text-3xl font-bold mb-4 text-black">{title || "Unknown Title"}</h1>
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-3xl font-bold text-black">{title}</h1>
+              <AddToLibraryButton 
+                book={{
+                  id,
+                  title,
+                  author: authors?.join(", ") || "Unknown Author",
+                  description,
+                  imageUrl: imageLinks?.thumbnail
+                }}
+              />
+            </div>
             <p className="text-sm text-gray-700 mb-6">
               Written by: {authors?.join(", ") || "Unknown Author"}
             </p>
@@ -183,9 +196,9 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
                 Average Rating: Not available
               </p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 mb-4">
               <Rating bookId={id} />
-              <AddToFavoritesButton bookId={id} isFavorite={false} />
+              <ReadingStatus bookId={id} />
             </div>
           </div>
         </div>
