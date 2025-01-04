@@ -47,12 +47,18 @@ export default function ReadingStatus({ bookId }: { bookId: string }) {
 
     const { error } = await supabase
       .from(table)
-      .upsert({
-        user_id: user.id,
-        book_id: bookId,
-        status: newStatus,
-        updated_at: new Date().toISOString()
-      });
+      .upsert(
+        {
+          user_id: user.id,
+          book_id: bookId,
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        },
+        { 
+          onConflict: 'user_id,book_id',
+          ignoreDuplicates: false 
+        }
+      );
 
     if (error) {
       console.error('Error updating status:', error);
