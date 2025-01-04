@@ -41,6 +41,61 @@ export default function BooksPage() {
       return;
     }
 
+    // Fetch both types of ratings
+    const { data: regularRatings } = await supabase
+      .from("ratings")
+      .select("book_id, rating");
+
+    const { data: googleRatings } = await supabase
+      .from("ratings_google_books")
+      .select("book_id, rating");
+
+    // Combine ratings into a lookup object
+    const allRatings = {
+      ...(regularRatings || []).reduce((acc: any, curr) => {
+        if (!acc[curr.book_id]) acc[curr.book_id] = [];
+        acc[curr.book_id].push(curr.rating);
+        return acc;
+      }, {}),
+      ...(googleRatings || []).reduce((acc: any, curr) => {
+        if (!acc[curr.book_id]) acc[curr.book_id] = [];
+        acc[curr.book_id].push(curr.rating);
+        return acc;
+      }, {})
+    };
+
+    // Calculate average rating for a book
+    const getAverageRating = (bookId: string) => {
+      const ratings = allRatings[bookId] || [];
+      return ratings.length > 0
+        ? (ratings.reduce((sum: number, r: number) => sum + r, 0) / ratings.length).toFixed(1)
+        : "0";
+    };
+
+    // Fetch regular books reading statuses
+    const { data: regularStatuses } = await supabase
+      .from("reading_status")
+      .select("book_id, status")
+      .eq("user_id", user.id);
+
+    // Fetch Google Books reading statuses
+    const { data: googleStatuses } = await supabase
+      .from("google_books_reading_status")
+      .select("book_id, status")
+      .eq("user_id", user.id);
+
+    // Combine all reading statuses into one object
+    const readingStatuses = {
+      ...(regularStatuses || []).reduce((acc, curr) => ({
+        ...acc,
+        [curr.book_id]: curr.status
+      }), {}),
+      ...(googleStatuses || []).reduce((acc, curr) => ({
+        ...acc,
+        [curr.book_id]: curr.status
+      }), {})
+    };
+
     // Fetch regular books
     const { data: booksData, error: booksError } = await supabase
       .from("books")
@@ -63,63 +118,35 @@ export default function BooksPage() {
       `)
       .eq('user_id', user.id); // Only fetch books added by this user
 
-    // If user is logged in, fetch reading statuses separately
-    let readingStatuses: ReadingStatuses = {};
-    if (user) {
-      const { data: statusData } = await supabase
-        .from('reading_status')
-        .select('book_id, status')
-        .eq('user_id', user.id);
-      
-      readingStatuses = (statusData || []).reduce((acc: ReadingStatuses, curr) => {
-        acc[curr.book_id] = curr.status;
-        return acc;
-      }, {});
-    }
-
     if (booksError || googleBooksError) {
       console.error("Error fetching books:", booksError || googleBooksError);
       setError("Error loading books");
       return;
     }
 
-    // Process regular books
-    const processedBooks = (booksData || []).map((book: any) => {
-      const ratings = book.ratings || [];
-      const averageRating =
-        ratings.length > 0
-          ? (
-              ratings.reduce(
-                (sum: number, r: { rating: number }) => sum + r.rating,
-                0
-              ) / ratings.length
-            ).toFixed(1)
-          : "0";
-      return {
-        id: book.id,
-        title: book.title,
-        author: book.author,
-        averageRating: parseFloat(averageRating) || 0,
-        image_url: book.image_url || null,
-        status: readingStatuses[book.id] || null,
-        isGoogleBook: false
-      };
-    });
-
     // Process Google books
     const processedGoogleBooks = (googleBooksData || []).map((book: any) => ({
       id: book.id,
       title: book.title,
       author: book.author,
-      averageRating: 0,
+      averageRating: parseFloat(getAverageRating(book.id)) || 0,
       image_url: book.image_url || null,
       status: readingStatuses[book.id] || null,
       isGoogleBook: true
     }));
 
-    const allBooks = [...processedBooks, ...processedGoogleBooks];
-    setBooks(allBooks);
-    setFilteredBooks(allBooks);
+    // Process regular books
+    const processedBooks = (booksData || []).map((book: any) => ({
+      id: book.id,
+      title: book.title,
+      author: book.author,
+      averageRating: parseFloat(getAverageRating(book.id)) || 0,
+      image_url: book.image_url || null,
+      status: readingStatuses[book.id] || null,
+      isGoogleBook: false
+    }));
+
+    setBooks([...processedBooks, ...processedGoogleBooks]);
   };
 
   useEffect(() => {
