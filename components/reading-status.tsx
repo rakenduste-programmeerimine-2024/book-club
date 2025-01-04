@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -10,14 +9,19 @@ export default function ReadingStatus({ bookId }: { bookId: string }) {
   const [status, setStatus] = useState<Status | null>(null);
   const [loading, setLoading] = useState(false);
   const supabase = createClient();
+  
+  // Check if it's a Google Book by checking if the ID is not a UUID
+  const isGoogleBook = !bookId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
 
   useEffect(() => {
     const fetchStatus = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      const table = isGoogleBook ? 'google_books_reading_status' : 'reading_status';
+      
       const { data } = await supabase
-        .from('reading_status')
+        .from(table)
         .select('status')
         .eq('book_id', bookId)
         .eq('user_id', user.id)
@@ -27,7 +31,7 @@ export default function ReadingStatus({ bookId }: { bookId: string }) {
     };
 
     fetchStatus();
-  }, [bookId]);
+  }, [bookId, isGoogleBook]);
 
   const updateStatus = async (newStatus: Status) => {
     setLoading(true);
@@ -39,14 +43,16 @@ export default function ReadingStatus({ bookId }: { bookId: string }) {
       return;
     }
 
+    const table = isGoogleBook ? 'google_books_reading_status' : 'reading_status';
+
     const { error } = await supabase
-      .from('reading_status')
+      .from(table)
       .upsert({
         user_id: user.id,
         book_id: bookId,
         status: newStatus,
         updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id,book_id' });
+      });
 
     if (error) {
       console.error('Error updating status:', error);

@@ -13,7 +13,13 @@ interface Book {
   averageRating: number;
   image_url: string | null;
   status?: Status | null;
+  isGoogleBook: boolean;
 }
+
+// Add type definition
+type ReadingStatuses = {
+  [key: string]: Status;
+};
 
 export default function BooksPage() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -27,9 +33,15 @@ export default function BooksPage() {
   const [error, setError] = useState<string | null>(null);
 
   const fetchBooks = async () => {
-    const supabase = await createClient();
+    const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    if (!user) {
+      setError("Please log in to view your books");
+      return;
+    }
+
+    // Fetch regular books
     const { data: booksData, error: booksError } = await supabase
       .from("books")
       .select(`
@@ -37,20 +49,42 @@ export default function BooksPage() {
         title,
         author,
         ratings (rating),
-        is_favorite,
-        image_url,
-        reading_status!inner (
-          status
-        )
+        image_url
       `);
 
-    if (booksError) {
-      console.error("Error fetching books:", booksError.message);
+    // Fetch Google books (only user's books)
+    const { data: googleBooksData, error: googleBooksError } = await supabase
+      .from("google_books")
+      .select(`
+        id,
+        title,
+        author,
+        image_url
+      `)
+      .eq('user_id', user.id); // Only fetch books added by this user
+
+    // If user is logged in, fetch reading statuses separately
+    let readingStatuses: ReadingStatuses = {};
+    if (user) {
+      const { data: statusData } = await supabase
+        .from('reading_status')
+        .select('book_id, status')
+        .eq('user_id', user.id);
+      
+      readingStatuses = (statusData || []).reduce((acc: ReadingStatuses, curr) => {
+        acc[curr.book_id] = curr.status;
+        return acc;
+      }, {});
+    }
+
+    if (booksError || googleBooksError) {
+      console.error("Error fetching books:", booksError || googleBooksError);
       setError("Error loading books");
       return;
     }
 
-    const processedBooks = booksData.map((book: any) => {
+    // Process regular books
+    const processedBooks = (booksData || []).map((book: any) => {
       const ratings = book.ratings || [];
       const averageRating =
         ratings.length > 0
@@ -67,12 +101,25 @@ export default function BooksPage() {
         author: book.author,
         averageRating: parseFloat(averageRating) || 0,
         image_url: book.image_url || null,
-        status: book.reading_status?.[0]?.status || null
+        status: readingStatuses[book.id] || null,
+        isGoogleBook: false
       };
     });
 
-    setBooks(processedBooks);
-    setFilteredBooks(processedBooks);
+    // Process Google books
+    const processedGoogleBooks = (googleBooksData || []).map((book: any) => ({
+      id: book.id,
+      title: book.title,
+      author: book.author,
+      averageRating: 0,
+      image_url: book.image_url || null,
+      status: readingStatuses[book.id] || null,
+      isGoogleBook: true
+    }));
+
+    const allBooks = [...processedBooks, ...processedGoogleBooks];
+    setBooks(allBooks);
+    setFilteredBooks(allBooks);
   };
 
   useEffect(() => {
@@ -194,7 +241,7 @@ export default function BooksPage() {
           <Link href={`/books/${book.id}`} key={book.id}>
             <div
               className="bg-white shadow-md rounded-md overflow-hidden cursor-pointer hover:shadow-lg"
-              style={{ width: "270px", height: "320px" }}
+              style={{ width: "270px", height: "400px" }}
             >
               {book.image_url && (
                 <img
@@ -204,9 +251,21 @@ export default function BooksPage() {
                 />
               )}
               <div className="p-4 h-1/3 flex flex-col justify-between">
-                <h2 className="text-lg font-bold truncate">{book.title}</h2>
-                <p className="text-gray-600 truncate">{book.author}</p>
-                <p className="text-sm text-gray-700 mt-2">
+                <div>
+                  <h2 className="text-lg font-bold truncate">{book.title}</h2>
+                  <p className="text-gray-600 truncate">{book.author}</p>
+                  {book.status && (
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      book.status === 'CURRENTLY_READING' ? 'bg-blue-100 text-blue-800' :
+                      book.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
+                      book.status === 'PLAN_TO_READ' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {book.status.replace(/_/g, ' ')}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-gray-700">
                   {book.averageRating
                     ? `⭐ ${book.averageRating.toFixed(1)}/5`
                     : "No ratings yet"}
