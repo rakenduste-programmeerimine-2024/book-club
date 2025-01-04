@@ -31,7 +31,7 @@ export default function ReviewsPage() {
         return;
       }
 
-      const { data, error } = await supabase
+      const { data: regularReviews } = await supabase
         .from('ratings')
         .select(`
           id,
@@ -45,18 +45,40 @@ export default function ReviewsPage() {
             image_url
           )
         `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .eq('user_id', user.id);
 
-      if (error) {
-        console.error('Error fetching reviews:', error);
-      } else {
-        const transformedData = data.map((item: any) => ({
-          ...item,
-          book: item.books
-        }));
-        setReviews(transformedData);
-      }
+      // Fetch Google Books reviews
+      const { data: googleReviews } = await supabase
+        .from('ratings_google_books')
+        .select(`
+          id,
+          rating,
+          comment,
+          created_at,
+          google_books:book_id (
+            id,
+            title,
+            author,
+            image_url
+          )
+        `)
+        .eq('user_id', user.id);
+
+      const transformedRegular = (regularReviews || []).map((item: any) => ({
+        ...item,
+        book: item.books
+      }));
+
+      const transformedGoogle = (googleReviews || []).map((item: any) => ({
+        ...item,
+        book: item.google_books
+      }));
+
+      // Combine all reviews and sort by date
+      const allReviews = [...transformedRegular, ...transformedGoogle]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setReviews(allReviews);
       setLoading(false);
     };
 
