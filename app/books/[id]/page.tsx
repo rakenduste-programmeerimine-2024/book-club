@@ -55,18 +55,43 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
 
   if (book) {
     // Fetch ratings with user details
-    const { data: ratings } = await supabase
+    const { data: regularRatings } = await supabase
       .from("ratings")
-      .select("rating, comment, created_at, user_id, profiles(username)")
+      .select(`
+        id,
+        rating,
+        comment,
+        created_at,
+        user_id,
+        profiles:user_id (
+          username
+        )
+      `)
       .eq("book_id", id);
 
+    // Also fetch Google Books ratings
+    const { data: ratings, error: ratingsError } = await supabase
+      .from("ratings_google_books")
+      .select(`
+        id,
+        rating,
+        comment,
+        created_at,
+        user_id
+      `)
+      .eq("book_id", id);
+
+    if (ratingsError) console.error('Ratings error:', ratingsError);
+
+    const allRatings = [...(regularRatings || []), ...(ratings || [])];
+
     const averageRating =
-      ratings && ratings.length > 0
+      allRatings.length > 0
         ? (
-            ratings.reduce(
+            allRatings.reduce(
               (sum: number, r: { rating: number }) => sum + r.rating,
               0
-            ) / ratings.length
+            ) / allRatings.length
           ).toFixed(1)
         : "No ratings yet";
 
@@ -104,36 +129,36 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
         {/* Reviews Section */}
         <div className="mt-8">
           <h2 className="text-2xl font-semibold text-black mb-4">Reviews</h2>
-          {ratings && ratings.length > 0 ? (
+          {allRatings.length > 0 ? (
             <div className="space-y-4">
-              {ratings.map((ratings, index) => (
+              {allRatings.map((rating, index) => (
                 <div
                   key={index}
                   className="bg-white p-4 rounded-md shadow-md border border-gray-200"
                 >
                   <div className="flex items-center gap-2">
                     <p className="text-sm text-gray-500">
-                      {ratings.profiles?.[0]?.username ? (
+                      {rating.profiles?.username ? (
                         <Link
-                          href={`/profiles/${ratings.user_id}`}
+                          href={`/profiles/${rating.user_id}`}
                           className="text-blue-500 hover:underline"
                         >
-                          {ratings.profiles[0].username}
+                          {rating.profiles.username}
                         </Link>
                       ) : (
                         "Anonymous"
                       )}
                     </p>
                     <div className="flex gap-1">
-                      {renderStars(ratings.rating)}
+                      {renderStars(rating.rating)}
                     </div>
                   </div>
                   <div className="text-sm text-gray-500 flex items-center">
                     <span className="font-semibold mr-2">Reviewed on</span> - 
-                    <span className="ml-2">{formatDateTime(ratings.created_at)}</span>
+                    <span className="ml-2">{formatDateTime(rating.created_at)}</span>
                   </div>
                   <p className="text-lg text-black mt-2">
-                    {ratings.comment || "No comment provided."}
+                    {rating.comment || "No comment provided."}
                   </p>
                 </div>
               ))}
@@ -161,6 +186,29 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
     const {
       volumeInfo: { title, authors, description, imageLinks },
     } = googleBook;
+
+    const { data: ratings, error: ratingsError } = await supabase
+      .from("ratings_google_books")
+      .select(`
+        id,
+        rating,
+        comment,
+        created_at,
+        user_id
+      `)
+      .eq("book_id", id);
+
+    if (ratingsError) console.error('Ratings error:', ratingsError);
+
+    const averageRating =
+      ratings && ratings.length > 0
+        ? (
+            ratings.reduce(
+              (sum: number, r: { rating: number }) => sum + r.rating,
+              0
+            ) / ratings.length
+          ).toFixed(1)
+        : "No ratings yet";
 
     return (
       <div className="p-8 rounded-md shadow-lg max-w-4xl mx-auto mt-12 bg-[#dbd2c3] border border-[#b4a68f] flex flex-col gap-8">
@@ -193,7 +241,7 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
             </p>
             <div className="mb-4">
               <p className="text-lg text-gray-800 font-semibold">
-                Average Rating: Not available
+                Average Rating: {averageRating}
               </p>
             </div>
             <div className="flex items-center gap-4 mb-4">
@@ -203,10 +251,46 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
           </div>
         </div>
 
-        {/* No Reviews for Fallback */}
+        {/* Reviews Section */}
         <div className="mt-8">
           <h2 className="text-2xl font-semibold text-black mb-4">Reviews</h2>
-          <p className="text-gray-700">No reviews available for this book.</p>
+          {ratings && ratings.length > 0 ? (
+            <div className="space-y-4">
+              {ratings.map((rating, index) => (
+                <div
+                  key={index}
+                  className="bg-white p-4 rounded-md shadow-md border border-gray-200"
+                >
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-gray-500">
+                      {rating.profiles?.username ? (
+                        <Link
+                          href={`/profiles/${rating.user_id}`}
+                          className="text-blue-500 hover:underline"
+                        >
+                          {rating.profiles.username}
+                        </Link>
+                      ) : (
+                        "Anonymous"
+                      )}
+                    </p>
+                    <div className="flex gap-1">
+                      {renderStars(rating.rating)}
+                    </div>
+                  </div>
+                  <div className="text-sm text-gray-500 flex items-center">
+                    <span className="font-semibold mr-2">Reviewed on</span> - 
+                    <span className="ml-2">{formatDateTime(rating.created_at)}</span>
+                  </div>
+                  <p className="text-lg text-black mt-2">
+                    {rating.comment || "No comment provided."}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-700">No reviews available for this book.</p>
+          )}
         </div>
       </div>
     );
