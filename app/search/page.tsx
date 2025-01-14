@@ -8,7 +8,9 @@ interface Book {
   image_url: string | null;
 }
 
-export default async function SearchPage(props: { searchParams: { q: string } }) {
+export default async function SearchPage(props: {
+  searchParams: { q: string };
+}) {
   const supabase = createClient();
   const query = props.searchParams.q || "";
 
@@ -18,7 +20,7 @@ export default async function SearchPage(props: { searchParams: { q: string } })
   let googleBooks: Book[] = [];
 
   if (query) {
-    // Fetch from Supabase
+
     const { data, error } = await supabase
       .from("books")
       .select("id, title, author, image_url")
@@ -28,7 +30,6 @@ export default async function SearchPage(props: { searchParams: { q: string } })
       supabaseBooks = data;
     }
 
-    // Fetch from Google Books API
     try {
       const response = await fetch(
         `https://www.googleapis.com/books/v1/volumes?q=${query}&key=${GOOGLE_BOOKS_API_KEY}&maxResults=20`
@@ -48,7 +49,6 @@ export default async function SearchPage(props: { searchParams: { q: string } })
     }
   }
 
-  // Combine results from both sources
   const books = [...supabaseBooks, ...googleBooks];
 
   return (
