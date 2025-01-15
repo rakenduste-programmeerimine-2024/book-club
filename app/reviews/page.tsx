@@ -24,7 +24,9 @@ export default function ReviewsPage() {
   useEffect(() => {
     const fetchReviews = async () => {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (!user) {
         setLoading(false);
@@ -32,8 +34,9 @@ export default function ReviewsPage() {
       }
 
       const { data: regularReviews } = await supabase
-        .from('ratings')
-        .select(`
+        .from("ratings")
+        .select(
+          `
           id,
           rating,
           comment,
@@ -44,13 +47,14 @@ export default function ReviewsPage() {
             author,
             image_url
           )
-        `)
-        .eq('user_id', user.id);
+        `
+        )
+        .eq("user_id", user.id);
 
-      // Fetch Google Books reviews
       const { data: googleReviews } = await supabase
-        .from('ratings_google_books')
-        .select(`
+        .from("ratings_google_books")
+        .select(
+          `
           id,
           rating,
           comment,
@@ -61,22 +65,24 @@ export default function ReviewsPage() {
             author,
             image_url
           )
-        `)
-        .eq('user_id', user.id);
+        `
+        )
+        .eq("user_id", user.id);
 
       const transformedRegular = (regularReviews || []).map((item: any) => ({
         ...item,
-        book: item.books
+        book: item.books,
       }));
 
       const transformedGoogle = (googleReviews || []).map((item: any) => ({
         ...item,
-        book: item.google_books
+        book: item.google_books,
       }));
 
-      // Combine all reviews and sort by date
-      const allReviews = [...transformedRegular, ...transformedGoogle]
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      const allReviews = [...transformedRegular, ...transformedGoogle].sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
 
       setReviews(allReviews);
       setLoading(false);
@@ -111,12 +117,14 @@ export default function ReviewsPage() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-8">My Reviews</h1>
-      
+
       {reviews.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-lg text-gray-600 mb-4">You haven't written any reviews yet.</p>
-          <Link 
-            href="/books" 
+          <p className="text-lg text-gray-600 mb-4">
+            You haven't written any reviews yet.
+          </p>
+          <Link
+            href="/books"
             className="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
           >
             Find Books to Review
@@ -125,7 +133,10 @@ export default function ReviewsPage() {
       ) : (
         <div className="grid gap-6">
           {reviews.map((review) => (
-            <div key={review.id} className="bg-card rounded-lg shadow-md p-6 flex gap-6">
+            <div
+              key={review.id}
+              className="bg-card rounded-lg shadow-md p-6 flex gap-6"
+            >
               <div className="w-32 flex-shrink-0">
                 <img
                   src={review.book.image_url || "/placeholder.png"}
@@ -133,17 +144,17 @@ export default function ReviewsPage() {
                   className="w-full h-48 object-cover rounded-md"
                 />
               </div>
-              
+
               <div className="flex-1">
                 <Link href={`/books/${review.book.id}`}>
                   <h2 className="text-xl font-semibold hover:text-primary transition-colors">
                     {review.book.title}
                   </h2>
                 </Link>
-                <p className="text-muted-foreground mb-2">{review.book.author}</p>
-                <div className="flex mb-3">
-                  {renderStars(review.rating)}
-                </div>
+                <p className="text-muted-foreground mb-2">
+                  {review.book.author}
+                </p>
+                <div className="flex mb-3">{renderStars(review.rating)}</div>
                 <p className="text-sm text-muted-foreground mb-2">
                   Reviewed on {new Date(review.created_at).toLocaleDateString()}
                 </p>
