@@ -8,19 +8,48 @@ interface Book {
   image_url: string | null;
 }
 
-export default async function SearchPage(props: { searchParams: { q: string } }) {
+export default async function SearchPage(props: {
+  searchParams: { q: string };
+}) {
   const supabase = createClient();
   const query = props.searchParams.q || "";
 
-  let books: Book[] = [];
+  const GOOGLE_BOOKS_API_KEY = process.env.GOOGLE_BOOKS_API_KEY;
+
+  let supabaseBooks: Book[] = [];
+  let googleBooks: Book[] = [];
+
   if (query) {
+
     const { data, error } = await supabase
       .from("books")
       .select("id, title, author, image_url")
       .ilike("title", `%${query}%`);
 
-    if (!error && data) books = data;
+    if (!error && data) {
+      supabaseBooks = data;
+    }
+
+    try {
+      const response = await fetch(
+        `https://www.googleapis.com/books/v1/volumes?q=${query}&key=${GOOGLE_BOOKS_API_KEY}&maxResults=20`
+      );
+      const googleData = await response.json();
+
+      if (googleData.items) {
+        googleBooks = googleData.items.map((item: any) => ({
+          id: item.id,
+          title: item.volumeInfo.title || "Unknown Title",
+          author: item.volumeInfo.authors?.join(", ") || "Unknown Author",
+          image_url: item.volumeInfo.imageLinks?.thumbnail || null,
+        }));
+      }
+    } catch (error: any) {
+      console.error("Error fetching Google Books:", error.message);
+    }
   }
+
+  const books = [...supabaseBooks, ...googleBooks];
 
   return (
     <main className="p-8">

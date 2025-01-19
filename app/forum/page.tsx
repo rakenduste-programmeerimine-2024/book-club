@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -73,6 +74,7 @@ export default function ForumPage() {
             </div>
           </Link>
         ))}
+
       </div>
     </div>
   );

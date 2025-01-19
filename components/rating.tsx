@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 
@@ -15,16 +14,14 @@ export default function Rating({ bookId }: { bookId: string }) {
         const user = await supabase.auth.getUser();
         if (!user.data?.user) return;
 
-        const { data, error } = await supabase
-          .from("ratings")
+        const { data } = await supabase
+          .from("ratings_google_books")
           .select("rating, comment")
           .eq("book_id", bookId)
           .eq("user_id", user.data.user.id)
           .single();
 
-        if (error && error.code !== "PGRST116") {
-          console.error("Error fetching user rating:", error.message);
-        } else if (data) {
+        if (data) {
           setCurrentRating(data.rating);
           setComment(data.comment || "");
         }
@@ -43,35 +40,30 @@ export default function Rating({ bookId }: { bookId: string }) {
     }
 
     setLoading(true);
+
     try {
       const user = await supabase.auth.getUser();
-
       if (!user.data?.user) {
         alert("You must be logged in to rate and review this book.");
         return;
       }
 
       const { error } = await supabase
-        .from("ratings")
+        .from("ratings_google_books")
         .upsert(
-          {
-            user_id: user.data.user.id,
-            book_id: bookId,
-            rating: currentRating,
-            comment: comment.trim() || null,
-          },
-          { onConflict: "user_id,book_id" }
+          [{ user_id: user.data.user.id, book_id: bookId, rating: currentRating, comment: comment.trim() || null }],
+          { onConflict: ["user_id", "book_id"] }
         );
 
       if (error) {
-        console.error("Error saving rating and comment:", error.message);
+        console.error("Error saving rating and comment:", error.message || error);
         alert("An error occurred while saving your review.");
         return;
       }
 
       alert("Your review has been saved!");
-    } catch (error) {
-      console.error("Error submitting rating and comment:", error);
+      setCurrentRating(null);
+      setComment("");
     } finally {
       setLoading(false);
     }
@@ -82,16 +74,13 @@ export default function Rating({ bookId }: { bookId: string }) {
       <p className="text-lg font-semibold mb-4 text-[#3b3b3b] text-center">
         Rate and Review this Book
       </p>
-
       {/* Star Rating */}
       <div className="flex justify-center items-center gap-1 mb-4">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
             className={`text-4xl transition-all duration-200 ${
-              currentRating && star <= currentRating
-                ? "text-yellow-500"
-                : "text-gray-300"
+              currentRating && star <= currentRating ? "text-yellow-500" : "text-gray-300"
             } hover:text-yellow-400`}
             onClick={() => setCurrentRating(star)}
             disabled={loading}
@@ -100,7 +89,6 @@ export default function Rating({ bookId }: { bookId: string }) {
           </button>
         ))}
       </div>
-
       {/* Comment Section */}
       <textarea
         className="w-full p-3 border rounded-md text-sm text-gray-700 bg-[#f2ebe3] focus:ring focus:ring-[#b4a68f] resize-none"
@@ -110,7 +98,6 @@ export default function Rating({ bookId }: { bookId: string }) {
         onChange={(e) => setComment(e.target.value)}
         disabled={loading}
       ></textarea>
-
       {/* Submit Button */}
       <button
         className={`w-full mt-4 py-2 rounded-md text-white font-semibold ${

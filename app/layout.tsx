@@ -9,8 +9,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <title>Book Club</title>
+      </head>
       <body>
-        <nav className="fixed w-full p-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <nav className="fixed w-full p-4 border-b bg-background z-50 shadow-md">
           <div className="max-w-5xl mx-auto flex justify-between items-center">
             <Link href="/" className="font-bold text-xl text-foreground">
               Book Club
@@ -18,13 +21,16 @@ export default function RootLayout({
 
             <div className="flex-1 flex justify-center gap-6">
               <Link href="/books" className="hover:underline text-foreground">
-                Books
+                My books
               </Link>
               <Link href="/reviews" className="hover:underline text-foreground">
-                Reviews
+                My reviews
               </Link>
-              <Link href="/about" className="hover:underline text-foreground">
-                About
+              <Link href="/forum" className="hover:underline text-foreground">
+                Forum
+              </Link>
+              <Link href="/top100" className="hover:underline text-foreground">
+                Top 100
               </Link>
               <Link href="/forum" className="hover:underline text-foreground">
                 Forum
@@ -56,7 +62,7 @@ export default function RootLayout({
           </div>
         </nav>
 
-        <div className="pt-16 bg-background">{children}</div>
+        <div className="pt-[calc(64px+1rem)] bg-background">{children}</div>
       </body>
     </html>
   );
