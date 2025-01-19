@@ -25,12 +25,15 @@ export default function AddToLibraryButton({ book }: AddToLibraryButtonProps) {
 
       const { data } = await supabase
         .from('google_books')
-        .select('id')
+        .select('id, user_id')
         .eq('id', book.id)
-        .eq('user_id', user.id)
         .single();
       
-      setIsInLibrary(!!data);
+      if (data && data.user_id && data.user_id.includes(user.id)) {
+        setIsInLibrary(true);
+      } else {
+        setIsInLibrary(false);
+      }
     };
 
     checkIfInLibrary();
@@ -40,30 +43,63 @@ export default function AddToLibraryButton({ book }: AddToLibraryButtonProps) {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         alert("Please log in to add books to your library");
         setLoading(false);
         return;
       }
 
-      const { error } = await supabase
+      // Check if the book is already in the library
+      const { data: existingBook } = await supabase
         .from('google_books')
-        .insert({
-          id: book.id,
-          title: book.title,
-          author: book.author,
-          description: book.description || null,
-          image_url: book.imageUrl || null,
-          created_at: new Date().toISOString(),
-          user_id: user.id
-        });
+        .select('id, user_id')
+        .eq('id', book.id)
+        .single();
 
-      if (error) {
-        console.error('Error adding book:', error);
-        alert('Failed to add book to library');
+      if (existingBook) {
+        const userIds = existingBook.user_id || [];
+        if (!userIds.includes(user.id)) {
+          // Add user_id to the array if not already present
+          const { error } = await supabase
+            .from('google_books')
+            .update({
+              user_id: [...userIds, user.id]
+            })
+            .eq('id', book.id);
+
+          if (error) {
+            console.error('Error adding user to book:', error);
+            alert(`Failed to add user to book in library: ${error.message || error}`);
+          } else {
+            console.log('Book updated successfully');
+            setIsInLibrary(true);
+          }
+        } else {
+          // User is already in the library
+          setIsInLibrary(true);
+        }
       } else {
-        setIsInLibrary(true);
+        // Book doesn't exist, insert new book with user_id
+        const { error } = await supabase
+          .from('google_books')
+          .insert({
+            id: book.id,
+            title: book.title,
+            author: book.author,
+            description: book.description || null,
+            image_url: book.imageUrl || null,
+            user_id: [user.id], // Store user_id as an array
+            created_at: new Date().toISOString(),
+          });
+
+        if (error) {
+          console.error('Error adding book:', error);
+          alert(`Failed to add book to library: ${error.message || error}`);
+        } else {
+          console.log('Book added successfully');
+          setIsInLibrary(true);
+        }
       }
     } catch (error) {
       console.error('Error:', error);
@@ -76,16 +112,67 @@ export default function AddToLibraryButton({ book }: AddToLibraryButtonProps) {
   const removeFromLibrary = async () => {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('google_books')
-        .delete()
-        .eq('id', book.id);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        alert("Please log in to remove books from your library");
+        setLoading(false);
+        return;
+      }
 
-      if (error) {
-        console.error('Error removing book:', error);
-        alert('Failed to remove book from library');
-      } else {
-        setIsInLibrary(false);
+      const { data: existingBook } = await supabase
+        .from('google_books')
+        .select('id, user_id')
+        .eq('id', book.id)
+        .single();
+
+      if (existingBook && existingBook.user_id) {
+        const updatedUserIds = existingBook.user_id.filter((id: string) => id !== user.id);
+
+        if (updatedUserIds.length === 0) {
+          // If no more user_ids, delete the book record and related records
+          // Delete related records in google_books_reading_status first
+          const { error: deleteStatusError } = await supabase
+            .from('google_books_reading_status')
+            .delete()
+            .eq('book_id', book.id);
+
+          if (deleteStatusError) {
+            console.error('Error deleting related status records:', deleteStatusError);
+            alert(`Failed to delete related status records: ${deleteStatusError.message || deleteStatusError}`);
+            setLoading(false);
+            return;
+          }
+
+          // Then delete the book record
+          const { error: deleteBookError } = await supabase
+            .from('google_books')
+            .delete()
+            .eq('id', book.id);
+
+          if (deleteBookError) {
+            console.error('Error deleting book:', deleteBookError);
+            alert(`Failed to delete book from library: ${deleteBookError.message || deleteBookError}`);
+          } else {
+            console.log('Book deleted successfully');
+            setIsInLibrary(false);
+          }
+        } else {
+          // Update the user_id array
+          const { error } = await supabase
+            .from('google_books')
+            .update({
+              user_id: updatedUserIds
+            })
+            .eq('id', book.id);
+
+          if (error) {
+            console.error('Error removing user from book:', error);
+            alert(`Failed to remove user from book in library: ${error.message || error}`);
+          } else {
+            console.log('User removed from book successfully');
+            setIsInLibrary(false);
+          }
+        }
       }
     } catch (error) {
       console.error('Error:', error);
@@ -97,7 +184,7 @@ export default function AddToLibraryButton({ book }: AddToLibraryButtonProps) {
 
   if (isInLibrary) {
     return (
-      <button 
+      <button
         onClick={removeFromLibrary}
         disabled={loading}
         className={`px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-md ${
