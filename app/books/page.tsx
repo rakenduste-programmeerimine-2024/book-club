@@ -29,20 +29,17 @@ export default function GoogleBooksPage() {
   const fetchGoogleBooks = async () => {
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-
     if (!user) {
       setError("Please log in to view your Google Books");
       return;
     }
-
     setCurrentUserId(user.id);
-
     try {
       // Fetch ratings for Google Books
       const { data: googleRatings } = await supabase
         .from("ratings_google_books")
         .select("book_id, rating");
-
+      
       // Calculate average ratings for books
       const ratingMap = (googleRatings || []).reduce(
         (ratingAccumulator: Record<string, number[]>, ratingEntry) => {
@@ -133,7 +130,19 @@ export default function GoogleBooksPage() {
   }
 
   if (!books || books.length === 0) {
-    return <div>No Google Books available</div>;
+    return (
+      <div className="text-center py-12">
+        <p className="text-lg text-gray-600 mb-4">
+          You have no books added.
+        </p>
+        <Link
+          href="/books/search"
+          className="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
+        >
+          Find Books to Add
+        </Link>
+      </div>
+    );
   }
 
   return (

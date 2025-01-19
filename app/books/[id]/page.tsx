@@ -54,8 +54,6 @@ export default async function BookDetailsPage({ params }: BookDetailsProps) {
     .single();
 
   if (googleBookError) {
-    console.error("Error fetching Google Books:", googleBookError);
-    // Fallback to Google Books API if not found in Supabase
   }
 
   const bookExistsInGoogleBooksTable = !!googleBookData;
