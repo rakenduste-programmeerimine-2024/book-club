@@ -1,48 +1,80 @@
-import React from "react";
+
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { createClient } from "@/utils/supabase/client";
 
-export default function Forum() {
+interface Thread {
+  id: string;
+  title: string;
+  author: string;
+  replies_count: number;
+  created_at: string;
+}
+
+export default function ForumPage() {
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchThreads = async () => {
+      const supabase = createClient();
+
+      const { data, error } = await supabase
+        .from("threads")
+        .select("id, title, author, created_at")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching threads:", error.message);
+        return;
+      }
+
+      setLoading(false);
+    };
+
+    fetchThreads();
+  }, []);
+
+  if (loading) return <p className="text-foreground">Loading...</p>;
+
   return (
-    <div className="w-full h-screen bg-background p-8">
-      <h1 className="text-4xl font-bold text-center text-card-foreground mb-14">
-        Book Club Forum
-      </h1>
-      <div className="flex justify-center space-x- 6">
-        <Link href={"/forum/general"}>
-          <div className="bg-card p-6 rounded-lg shadow-lg max-w-xs transform rotate-2 hover:rotate-0 transition-transfrom duration-300 cursor-pointer">
-            <h2 className="text-x1 font-semibold text-card-foreground mb-4">
-              General Discussion
-            </h2>
-            <p className="text-muted-foreground">
-              Share your thoughts, ask questions about your favorite books,
-              authors and plots
-            </p>
-          </div>
-        </Link>
+    <div className="p-6 max-w-5xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6 text-foreground">Forum</h1>
 
-        <Link href={"/forum/recommendations"}>
-          <div className="bg-card p-6 rounded-lg shadow-lg max-w-xs transform rotate-2 hover:rotate-0 transition-transform duration-300 cursor-pointer">
-            <h2 className="text-x1 font-semibold text-card-foreground mb-4">
-              Book Recommendations
-            </h2>
-            <p className="text-muted-foreground">
-              Looking for a new read? Wish to share your favorites? You are
-              awaited here!
-            </p>
-          </div>
+      <div className="mb-4 flex justify-between">
+        <Link href="/forum/new-thread">
+          <button className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-dark">
+            New Thread
+          </button>
         </Link>
+      </div>
 
-        <Link href={"/forum/reviews"}>
-          <div className="bg-card p-6 rounded-lg shadow-lg max-w-xs transform rotate-2 hover:rotate-0 transition-transform duration-300 cursor-pointer">
-            <h2 className="text-x1 font-semibold text-card-foreground mb-4">
-              Book Reviews
-            </h2>
-            <p className="text-muted-foreground">
-              Write and add your own reviews to existing discourse with other
-              club members here!
-            </p>
-          </div>
-        </Link>
+      <div className="bg-muted p-4 rounded-md shadow-md">
+        {threads.map((thread) => (
+          <Link
+            key={thread.id}
+            href={`/forum/thread/${thread.id}`}
+            className="block bg-background p-4 mb-2 rounded-md shadow hover:bg-muted/70"
+          >
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">
+                  {thread.title}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Started by {thread.author} •{" "}
+                  {new Date(thread.created_at).toLocaleString()}
+                </p>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {thread.replies_count} replies
+              </p>
+            </div>
+          </Link>
+        ))}
+
       </div>
     </div>
   );
