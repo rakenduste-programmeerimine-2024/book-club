@@ -136,10 +136,10 @@ export default function GoogleBooksPage() {
           You have no books added.
         </p>
         <Link
-          href="/books/search"
+          href="/top100"
           className="inline-block bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 transition-colors"
         >
-          Find Books to Add
+          Look for the best rated books!
         </Link>
       </div>
     );

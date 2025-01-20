@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 
@@ -28,8 +27,8 @@ export default function AddToLibraryButton({ book }: AddToLibraryButtonProps) {
         .select('id, user_id')
         .eq('id', book.id)
         .single();
-      
-      if (data && data.user_id && data.user_id.includes(user.id)) {
+
+      if (data && data.user_id && Array.isArray(data.user_id) && data.user_id.includes(user.id)) {
         setIsInLibrary(true);
       } else {
         setIsInLibrary(false);
@@ -43,7 +42,6 @@ export default function AddToLibraryButton({ book }: AddToLibraryButtonProps) {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
-
       if (!user) {
         alert("Please log in to add books to your library");
         setLoading(false);
@@ -128,50 +126,20 @@ export default function AddToLibraryButton({ book }: AddToLibraryButtonProps) {
       if (existingBook && existingBook.user_id) {
         const updatedUserIds = existingBook.user_id.filter((id: string) => id !== user.id);
 
-        if (updatedUserIds.length === 0) {
-          // If no more user_ids, delete the book record and related records
-          // Delete related records in google_books_reading_status first
-          const { error: deleteStatusError } = await supabase
-            .from('google_books_reading_status')
-            .delete()
-            .eq('book_id', book.id);
+        // Update the user_id array
+        const { error } = await supabase
+          .from('google_books')
+          .update({
+            user_id: updatedUserIds
+          })
+          .eq('id', book.id);
 
-          if (deleteStatusError) {
-            console.error('Error deleting related status records:', deleteStatusError);
-            alert(`Failed to delete related status records: ${deleteStatusError.message || deleteStatusError}`);
-            setLoading(false);
-            return;
-          }
-
-          // Then delete the book record
-          const { error: deleteBookError } = await supabase
-            .from('google_books')
-            .delete()
-            .eq('id', book.id);
-
-          if (deleteBookError) {
-            console.error('Error deleting book:', deleteBookError);
-            alert(`Failed to delete book from library: ${deleteBookError.message || deleteBookError}`);
-          } else {
-            console.log('Book deleted successfully');
-            setIsInLibrary(false);
-          }
+        if (error) {
+          console.error('Error removing user from book:', error);
+          alert(`Failed to remove user from book in library: ${error.message || error}`);
         } else {
-          // Update the user_id array
-          const { error } = await supabase
-            .from('google_books')
-            .update({
-              user_id: updatedUserIds
-            })
-            .eq('id', book.id);
-
-          if (error) {
-            console.error('Error removing user from book:', error);
-            alert(`Failed to remove user from book in library: ${error.message || error}`);
-          } else {
-            console.log('User removed from book successfully');
-            setIsInLibrary(false);
-          }
+          console.log('User removed from book successfully');
+          setIsInLibrary(false);
         }
       }
     } catch (error) {
