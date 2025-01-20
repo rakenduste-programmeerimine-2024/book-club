@@ -26,9 +26,6 @@ export default function RootLayout({
               <Link href="/reviews" className="hover:underline text-foreground">
                 My reviews
               </Link>
-              <Link href="/forum" className="hover:underline text-foreground">
-                Forum
-              </Link>
               <Link href="/top100" className="hover:underline text-foreground">
                 Top 100
               </Link>
